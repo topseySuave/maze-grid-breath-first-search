@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Maze with 2D Lines</title>
+</head>
+
+<body>
+    <canvas id="mazeCanvas" width="600" height="600"></canvas>
+    <script>
+        // Define maze dimensions
+        const rows = 15;
+        const cols = 15;
+        const cellSize = 40;
+
+        const maze = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+            [1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1],
+            [1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1],
+            [1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1]
+        ];
+
+        // Define the start and end points
+        const start = { row: 1, col: 1 };
+        const end = { row: 13, col: 13 };
+
+        // Get canvas context
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Draw the maze
+        function drawMaze() {
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    // Calculate position
+                    const x = col * cellSize;
+                    const y = row * cellSize;
+
+                    // Draw walls or paths
+                    if (maze[row][col] === 1) {
+                        // Draw wall as a filled rectangle
+                        ctx.fillStyle = 'black';
+                        ctx.fillRect(x, y, cellSize, cellSize);
+                    } else {
+                        // Draw path as an empty cell with a border
+                        ctx.strokeStyle = 'white';
+                        ctx.strokeRect(x, y, cellSize, cellSize);
+                    }
+                }
+            }
+
+            // Mark the start point in green
+            ctx.fillStyle = 'green';
+            ctx.fillRect(start.col * cellSize, start.row * cellSize, cellSize, cellSize);
+
+            // Mark the end point in red
+            ctx.fillStyle = 'red';
+            ctx.fillRect(end.col * cellSize, end.row * cellSize, cellSize, cellSize);
+        }
+
+        // BFS function to find the shortest path
+        function bfs(maze, start, end) {
+            console.log("🚀 ~ bfs ~ start:", start)
+            // convert start and end to array
+            start = [start.row, start.col];
+            end = [end.row, end.col];
+            
+            const directions = [
+                [0, 1], [1, 0], [0, -1], [-1, 0] // Right, Down, Left, Up
+            ];
+            const queue = [[start, [start]]]; // Queue stores the current position and path taken
+            // console.log("🚀 ~ bfs ~ queue:", JSON.stringify(queue))
+            const visited = new Set();
+            visited.add(start.toString());
+            console.log("🚀 ~ bfs ~ visited:", visited)
+
+            while (queue.length > 0) {
+                const [current, path] = queue.shift();
+                // console.log("🚀 ~ bfs ~ queue:", queue)
+                // console.log("🚀 ~ bfs ~ path:", path)
+                const [row, col] = current;
+
+                // Check if we've reached the end
+                if (row === end[0] && col === end[1]) return path;
+
+                // Explore all possible directions
+                for (const [dr, dc] of directions) {
+                    const newRow = row + dr;
+                    const newCol = col + dc;
+                    const newPos = [newRow, newCol];
+
+                    // Check bounds, walls, and whether it's visited
+                    if (
+                        newRow >= 0 && newRow < maze.length &&
+                        newCol >= 0 && newCol < maze[0].length &&
+                        maze[newRow][newCol] === 0 &&
+                        !visited.has(newPos.toString())
+                    ) {
+                        visited.add(newPos.toString());
+                        queue.push([newPos, [...path, newPos]]);
+                    }
+                }
+            }
+
+            // Return null if no path found
+            return null;
+        }
+
+        drawMaze();
+        const shortestPath = bfs(maze, start, end);
+        console.log("🚀 ~ shortestPath:", shortestPath)
+
+        // Draw the shortest path
+        if (shortestPath) {
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(start.col * cellSize + cellSize / 2, start.row * cellSize + cellSize / 2);
+            for (const [row, col] of shortestPath) {
+                ctx.lineTo(col * cellSize + cellSize / 2, row * cellSize + cellSize / 2);
+            }
+            ctx.stroke();
+        }
+    </script>
+</body>
+
+</html>
